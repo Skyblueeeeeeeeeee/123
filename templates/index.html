@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Theo dõi vị trí của oto</title>
+    <link rel="stylesheet" href="static/style/style.css">
+    <link rel="base" href="app.py">
+
+</head>
+
+<body>
+    <div class="container">
+        <img class="logotruong" src="static/image/logotruong.jpg" alt="logotruong" height="150" width="150">
+        <div class="header">
+        <div class="header1">TRƯỜNG ĐẠI HỌC SƯ PHẠM KỸ THUẬT HƯNG YÊN
+        </div>
+        <div class="header2">KHOA CƠ KHÍ ĐỘNG LỰC
+        </div>
+    </div>
+        <img src="static/image/logokhoa.jpg" class="logokhoa" alt="logokhoa" height="150" width="150">
+    </div>
+    <a id="google-map-link" class="linktimkiem" href="googleMapLink" target="_blank">Tìm kiếm vị trí</a>
+
+    <div id="telemetry-data">
+        <p id="latitude">Vĩ độ: </p>
+        <p id="longitude">Kinh độ: </p>
+        <p id="time">Thời gian: </p>
+    </div>
+
+    <div id="map"></div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.3.1/socket.io.js"></script>
+    <script>
+        
+        //real time
+        let formattedTime;
+        function displayRealTime() {
+            // Tạo một đối tượng Date mới
+            let currentTime = new Date();
+
+            // Lấy thông tin về giờ, phút, giây
+            let hours = currentTime.getHours();
+            let minutes = currentTime.getMinutes();
+            let seconds = currentTime.getSeconds();
+
+            // Định dạng thời gian để hiển thị
+            formattedTime = hours + ":" + minutes + ":" + seconds;
+
+            // Hiển thị trên trang web
+            document.getElementById("time").innerText = "Thời gian: " + formattedTime;
+        }
+
+        setInterval(displayRealTime, 1000);
+
+        displayRealTime();
+
+        const socket = io.connect('http://192.168.1.5:3000');
+        socket.on('connect', () => {
+            console.log('WebSocket connected');
+        });
+
+        socket.on('telemetry_data', data => {
+            console.log('Received telemetry data:', formattedTime, data);
+
+            const longitude = data.longitude;
+            const latitude = data.latitude;
+
+            // Hiển thị vĩ độ và kinh độ
+            document.getElementById("latitude").innerText = "Vĩ độ: " + latitude;
+            document.getElementById("longitude").innerText = "Kinh độ: " + longitude;
+
+            // Cập nhật link Google Map
+            updateGoogleMapLink(latitude, longitude);
+        });
+
+        setInterval(() => {
+            socket.emit('telemetry_update');
+        }, 1000);
+
+        function updateGoogleMapLink(latitude, longitude) {
+            const googleMapUrl = `https://www.google.com/maps?q=${latitude},${longitude}`;
+            const googleMapLink = document.getElementById('google-map-link');
+            googleMapLink.href = googleMapUrl;
+            googleMapLink.textContent = 'Tìm kiếm vị trí';
+            console.log(googleMapUrl);
+        }
+
+    </script>
+</body>
+
+</html>
